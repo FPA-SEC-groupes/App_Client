@@ -19,7 +19,8 @@ import '../view_models/location_permission_view_model.dart';
 import '../widgets/modal_bottom_sheet.dart';
 import '../widgets/space_card.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import '../models/theme_provider.dart'; // Make sure you have a theme provider
+import '../models/theme_provider.dart';
+import 'mapstest.dart'; // Make sure you have a theme provider
 
 class Home extends StatefulWidget {
   final Function(int) changePageIndex;
@@ -123,8 +124,17 @@ class _HomeState extends State<Home> {
               ),
               child: IconButton(
                 icon: Icon(Icons.map_outlined, color: orange),
-                onPressed: () {
-                  // Placeholder for map action
+                onPressed: () async {
+                  await _locationPermissionViewModel.checkLocationPermission(context).then((status) async {
+                    if(status==PermissionStatus.granted){
+                      widget.changePageIndex(1);
+                    }
+
+
+                  }).catchError((error) {
+                    // Handle signup error
+                  });
+
                 },
               ),
             )

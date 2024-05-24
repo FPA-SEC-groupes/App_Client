@@ -19,6 +19,8 @@ import '../widgets/restaruant_categories.dart';
 import '../widgets/snack_bar.dart';
 import '../widgets/space_info.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../models/theme_provider.dart';
+
 class Menu extends StatefulWidget {
   const Menu({Key? key}) : super(key: key);
 
@@ -37,11 +39,12 @@ class _MenuState extends State<Menu> {
   late String spaceId;
   Space? space;
   String? userId;
-  double _rating=0.0;
+  double _rating = 0.0;
 
   late final BasketViewModel _basketViewModel;
   final GlobalKey<ScaffoldMessengerState> _addProductScaffoldKey =
   GlobalKey<ScaffoldMessengerState>();
+
   @override
   void initState() {
     _basketViewModel = BasketViewModel(context);
@@ -54,12 +57,10 @@ class _MenuState extends State<Menu> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-
-    // Reload data and update the interface here
     _loadData();
     _getSpaceById();
     print(listProducts);
-    for(var prod in listProducts){
+    for (var prod in listProducts) {
       print(prod.toString());
     }
   }
@@ -160,135 +161,131 @@ class _MenuState extends State<Menu> {
   @override
   Widget build(BuildContext context) {
     NetworkStatus networkStatus = Provider.of<NetworkStatus>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
+      backgroundColor: themeProvider.isDarkMode ? Colors.grey[900] : Colors.white,
       appBar: AppBar(
-    automaticallyImplyLeading: false,
-    title:  Text(AppLocalizations.of(context)!.menu),
+        automaticallyImplyLeading: false,
+        backgroundColor: orange,
+        title: Text(
+          AppLocalizations.of(context)!.menu,
+          style: const TextStyle(color: Colors.white),
+        ),
       ),
       floatingActionButton: DraggableFab(
-      child: FloatingActionButton(
-    onPressed: () {
-      Navigator.pushNamed(context, basketRoute);
-    },
-    backgroundColor: orange,
-    child: const Icon(
-      Icons.shopping_basket,
-      color: Colors.white,
-    ),
-      )),
+        child: FloatingActionButton(
+          onPressed: () {
+            Navigator.pushNamed(context, basketRoute);
+          },
+          backgroundColor: orange,
+          child: const Icon(
+            Icons.shopping_basket,
+            color: Colors.white,
+          ),
+        ),
+      ),
       body: CustomScrollView(
-    controller: scrollController,
-    slivers: [
-      space != null
-          ? SliverToBoxAdapter(
-              child: SpaceInfo(
-                space: space!,
-                authentifiedUserId: userId, initialRating: _rating, onRatingUpdate: (rate ) {
-                  setState(() {
-                    _rating=rate;
-                  });
-              },submit: (){
-                  _menuViewModel.addRatingToSpace(_rating, space!.id).then((space) async {
-
-
-                    _getSpaceById();
-
-                    Navigator.of(context).pop();
-
-                  }).catchError((error) {
-
-                  });
+        controller: scrollController,
+        slivers: [
+          space != null
+              ? SliverToBoxAdapter(
+            child: SpaceInfo(
+              space: space!,
+              authentifiedUserId: userId,
+              initialRating: _rating,
+              onRatingUpdate: (rate) {
+                setState(() {
+                  _rating = rate;
+                });
               },
+              submit: () {
+                _menuViewModel.addRatingToSpace(_rating, space!.id).then((space) async {
+                  _getSpaceById();
+                  Navigator.of(context).pop();
+                }).catchError((error) {});
+              },
+            ),
+          )
+              : const SliverToBoxAdapter(child: SpaceInfoShimmer()),
+          if (_categories != null)
+            SliverPersistentHeader(
+              delegate: SpaceCategories(
+                onChanged: scrollToCategory,
+                selectedIndex: selectedCategoryIndex,
+                items: _categories!,
+              ),
+              pinned: true,
+            )
+          else
+            const SliverToBoxAdapter(child: TabBarShimmer()),
+          if (_categories != null)
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                    (BuildContext context, int index) {
+                  final category = _categories![index];
+                  return Container(
+                    color: themeProvider.isDarkMode ? Colors.grey[800] : lightGray,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 20),
+                          child: Text(
+                            category.categoryTitle.substring(0, 1).toUpperCase() +
+                                category.categoryTitle.substring(1),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18.0,
+                              color: themeProvider.isDarkMode ? Colors.white : Colors.black,
+                            ),
+                          ),
+                        ),
+                        if (listProducts.length > index)
+                          MediaQuery.removePadding(
+                            context: context,
+                            removeTop: true,
+                            child: ListView.builder(
+                              physics: const NeverScrollableScrollPhysics(),
+                              shrinkWrap: true,
+                              itemCount: listProducts[index].length,
+                              itemBuilder: (BuildContext context, int itemIndex) {
+                                final product = listProducts[index][itemIndex];
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 10),
+                                  child: GestureDetector(
+                                    child: MenuCard(
+                                      product: product,
+                                      onTap: () {
+                                        _basketViewModel.addProductToBasket(product.id!, 1).then((_) {}).catchError((error) {
+                                          print(error);
+                                        });
+                                      },
+                                    ),
+                                    onTap: () {
+                                      Navigator.pushNamed(context, productDetailsRoute, arguments: product);
+                                    },
+                                  ),
+                                );
+                              },
+                            ),
+                          )
+                        else
+                          const CircularProgressIndicator(),
+                      ],
+                    ),
+                  );
+                },
+                childCount: _categories!.length,
               ),
             )
-          : const SliverToBoxAdapter(
-              child: SpaceInfoShimmer()),
-      if (_categories != null)
-        SliverPersistentHeader(
-          delegate: SpaceCategories(
-            onChanged: scrollToCategory,
-            selectedIndex: selectedCategoryIndex,
-            items: _categories!,
-          ),
-          pinned: true,
-        )
-      else
-        const SliverToBoxAdapter(
-          child: TabBarShimmer()
-        ),
-      if (_categories != null)
-        SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (BuildContext context, int index) {
-              final category = _categories![index];
-
-              return Container(
-                color: lightGray,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 16.0, horizontal: 20),
-                      child: Text(
-                        category.categoryTitle
-                                .substring(0, 1)
-                                .toUpperCase() +
-                            category.categoryTitle.substring(1),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18.0,
-                        ),
-                      ),
-                    ),
-                    if (listProducts.length > index)
-                      MediaQuery.removePadding(
-                        context: context,
-                        removeTop: true,
-                        child: ListView.builder(
-                      physics: const NeverScrollableScrollPhysics(),
-                      shrinkWrap: true,
-                      itemCount: listProducts[index].length,
-                      itemBuilder:
-                          (BuildContext context, int itemIndex) {
-                        final product = listProducts[index][itemIndex];
-                        return Padding(
-                          padding: const EdgeInsets.only(
-                            bottom: 10,
-                          ),
-                          child: GestureDetector(
-                            child: MenuCard(product: product,onTap:  () {
-                              _basketViewModel.addProductToBasket(product.id!, 1).then((_) {
-                              }).catchError((error) {
-                                print(error);
-                              });
-                            },),
-                            onTap: () {
-                              Navigator.pushNamed(
-                                  context, productDetailsRoute,
-                                  arguments: product);
-                            },
-                          ),
-                        );
-                      },
-                        ),
-                      )
-                    else
-                      const CircularProgressIndicator(),
-                  ],
-                ),
-              );
-            },
-            childCount: _categories!.length,
-          ),
-        )
-      else
-        const SliverFillRemaining(
-          child: Center(
-            child: CircularProgressIndicator(),
-          ),
-        ),
-    ],
+          else
+            const SliverFillRemaining(
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+        ],
       ),
     );
   }

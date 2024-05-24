@@ -28,11 +28,11 @@ class ScanQrCode extends StatefulWidget {
 
 class _ScanQrCodeState extends State<ScanQrCode> {
   final CameraPermissionViewModel _cameraPermissionViewModel =
-      CameraPermissionViewModel();
+  CameraPermissionViewModel();
   late final QrCodeViewModel _qrCodeViewModel;
   final SecureStorage secureStorage = SecureStorage();
 
- late final BasketViewModel _basketViewModel;
+  late final BasketViewModel _basketViewModel;
   final LocationPermissionViewModel _locationPermissionViewModel = LocationPermissionViewModel();
   Position? _userPosition;
   void _handlePositionStream(Position position){
@@ -64,70 +64,70 @@ class _ScanQrCodeState extends State<ScanQrCode> {
     return Scaffold(
       body: networkStatus == NetworkStatus.Online
           ?widget.status==PermissionStatus.granted? Center(
-              child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                MaterialButton(
-                  color: orange,
-                  shape: const CircleBorder(),
-                  onPressed: () async {
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              MaterialButton(
+                color: orange,
+                shape: const CircleBorder(),
+                onPressed: () async {
 
-                    _cameraPermissionViewModel
-                        .checkCameraPermission(context)
-                        .then((status) async {
-                      print(status);
-                    }).catchError((error) {
-                      print(error);
-                    });
-                  },
-                  child: const Padding(
-                    padding: EdgeInsets.all(20.0),
-                    child: Icon(
-                      Icons.qr_code_scanner,
-                      size: 100,
-                      color: Colors.white,
-                    ),
+                  _cameraPermissionViewModel
+                      .checkCameraPermission(context)
+                      .then((status) async {
+                    print(status);
+                  }).catchError((error) {
+                    print(error);
+                  });
+                },
+                child: const Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: Icon(
+                    Icons.qr_code_scanner,
+                    size: 100,
+                    color: Colors.white,
                   ),
                 ),
-              ],
-            ))
-           :Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
+              ),
+            ],
+          ))
+          :Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.location_off_outlined,
+              size: 150,
+              color: gray,
+            ),
+            SizedBox(height: 20),
+            RichText(
+              textAlign: TextAlign.center,
+              text: TextSpan(
+                style: TextStyle(fontSize: 24),
                 children: [
-                  const Icon(
-                    Icons.location_off_outlined,
-                    size: 150,
-                    color: gray,
-                  ),
-                  SizedBox(height: 20),
-                  RichText(
-                    textAlign: TextAlign.center,
-                    text: TextSpan(
-                      style: TextStyle(fontSize: 24),
-                      children: [
-                        TextSpan(
-                            text:
-                            AppLocalizations.of(context)!.locationAccessRequired,
-                            style: const TextStyle(color: gray)),
-                        TextSpan(
-                          text:  AppLocalizations.of(context)!.retry,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, color: orange),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () {
-                              // Handle tap on 'Réessayer'
-                              openAppSettings();
-                            },
-                        ),
-                      ],
-                    ),
+                  TextSpan(
+                      text:
+                      AppLocalizations.of(context)!.locationAccessRequired,
+                      style: const TextStyle(color: gray)),
+                  TextSpan(
+                    text:  AppLocalizations.of(context)!.retry,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, color: orange),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        // Handle tap on 'Réessayer'
+                        openAppSettings();
+                      },
                   ),
                 ],
               ),
-            ):Center(
+            ),
+          ],
+        ),
+      ):Center(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(

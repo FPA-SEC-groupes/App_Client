@@ -8,6 +8,8 @@ import '../services/network_service.dart';
 import '../view_models/commands_view_model.dart';
 import 'command_details.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../models/theme_provider.dart';
+
 class ListCommands extends StatefulWidget {
   const ListCommands({super.key});
 
@@ -16,12 +18,11 @@ class ListCommands extends StatefulWidget {
 }
 
 class _ListCommandsState extends State<ListCommands> {
-  late CommandsViewModel _listCommandsViewModel ;
+  late CommandsViewModel _listCommandsViewModel;
   int selectedStatusIndex = 0;
 
   Future<List<Command>?> getCommandsByUserId() async {
-    List<Command>? commands =
-        await _listCommandsViewModel.getCommandsByUserId();
+    List<Command>? commands = await _listCommandsViewModel.getCommandsByUserId();
     return commands;
   }
 
@@ -29,39 +30,40 @@ class _ListCommandsState extends State<ListCommands> {
     double sum = await _listCommandsViewModel.getSumOfCommand(commandId);
     return sum;
   }
+
   @override
   void initState() {
-    // TODO: implement initState
     _listCommandsViewModel = CommandsViewModel(context);
-    getCommandsByUserId( );
-
+    getCommandsByUserId();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     NetworkStatus networkStatus = Provider.of<NetworkStatus>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
-      backgroundColor: lightGray,
+      backgroundColor: themeProvider.isDarkMode ? Colors.grey[900] : lightGray,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: Text(AppLocalizations.of(context)!.myOrders),
+        backgroundColor: orange,
       ),
-      body:networkStatus == NetworkStatus.Online
+      body: networkStatus == NetworkStatus.Online
           ? FutureBuilder(
         future: getCommandsByUserId(),
-        builder: (BuildContext context,
-            AsyncSnapshot snapshot) {
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return ListView.separated(
               itemCount: 10,
-              separatorBuilder: (context, index) =>  SizedBox(height: 10),
+              separatorBuilder: (context, index) => SizedBox(height: 10),
               itemBuilder: (context, index) {
-                return  const ItemCommandShimmer();
+                return const ItemCommandShimmer();
               },
             );
           } else if (snapshot.hasError) {
-            return  Center(
+            return Center(
               child: Text(AppLocalizations.of(context)!.errorRetrievingData),
             );
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -73,14 +75,10 @@ class _ListCommandsState extends State<ListCommands> {
               itemBuilder: (context, index) {
                 Command command = commands[index];
                 return FutureBuilder(
-                  future: getSumOfCommand(
-                      command.idCommand),
-                  builder: (BuildContext context,
-                      AsyncSnapshot<double> sumSnapshot) {
-                    if (sumSnapshot.connectionState ==
-                        ConnectionState.waiting) {
-                      return const SizedBox
-                          .shrink(); // or a loading widget
+                  future: getSumOfCommand(command.idCommand),
+                  builder: (BuildContext context, AsyncSnapshot<double> sumSnapshot) {
+                    if (sumSnapshot.connectionState == ConnectionState.waiting) {
+                      return const SizedBox.shrink(); // or a loading widget
                     } else if (sumSnapshot.hasError) {
                       return const Text('Error retrieving sum');
                     } else {
@@ -89,7 +87,6 @@ class _ListCommandsState extends State<ListCommands> {
                         child: ItemCommand(
                           command: command,
                           sum: sum,
-
                         ),
                         onTap: () {
                           Navigator.push(
@@ -109,14 +106,15 @@ class _ListCommandsState extends State<ListCommands> {
               },
               separatorBuilder: (context, index) {
                 return Container(
-                  color: lightGray,
+                  color: themeProvider.isDarkMode ? Colors.grey[800] : lightGray,
                   height: 10,
                 );
               },
             );
           }
         },
-      ):Center(
+      )
+          : Center(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
@@ -139,28 +137,20 @@ class _ListCommandsState extends State<ListCommands> {
                 style: const TextStyle(fontSize: 22, color: gray),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 10,),
+              const SizedBox(height: 10),
               MaterialButton(
                 color: orange,
                 height: 40,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10.0),
                 ),
-                onPressed:(){
-                  setState(() {
-
-                  });
+                onPressed: () {
+                  setState(() {});
                 },
-
-
                 child: Text(
                   AppLocalizations.of(context)!.retry,
-                  style: const TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
                 ),
-
               )
             ],
           ),

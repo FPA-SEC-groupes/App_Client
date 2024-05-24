@@ -1,25 +1,29 @@
 import 'dart:async';
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:hello_way_client/widgets/rating_dialog.dart';
 
 import '../models/space.dart';
 import '../res/app_colors.dart';
+import '../models/theme_provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 class SpaceInfo extends StatefulWidget {
   final Space space;
   final String? authentifiedUserId;
   final void Function(double) onRatingUpdate;
   final double initialRating;
   final void Function()? submit;
-  const SpaceInfo(
-      {super.key,
-      required this.space,
-      required this.authentifiedUserId,
-      required this.initialRating,
-      required this.onRatingUpdate,
-      this.submit});
+
+  const SpaceInfo({
+    super.key,
+    required this.space,
+    required this.authentifiedUserId,
+    required this.initialRating,
+    required this.onRatingUpdate,
+    this.submit,
+  });
 
   @override
   State<SpaceInfo> createState() => _SpaceInfoState();
@@ -39,29 +43,28 @@ class _SpaceInfoState extends State<SpaceInfo> {
       setState(() {
         _pages = widget.space.images!.isEmpty
             ? [
-                const FittedBox(
-                  child: Icon(Icons.image_outlined, color: gray),
-                )
-              ]
+          const FittedBox(
+            child: Icon(Icons.image_outlined, color: gray),
+          )
+        ]
             : List.generate(
-                widget.space.images!.length,
-                (index) => SizedBox(
-                  height: 50,
-                  child: ClipRRect(
-                    child: FittedBox(
-                      fit: BoxFit.fill,
-                      child: Image.memory(
-                        base64.decode(widget.space.images![index].data),
-                      ),
-                    ),
-                  ),
+          widget.space.images!.length,
+              (index) => SizedBox(
+            height: 50,
+            child: ClipRRect(
+              child: FittedBox(
+                fit: BoxFit.fill,
+                child: Image.memory(
+                  base64.decode(widget.space.images![index].data),
                 ),
-              );
+              ),
+            ),
+          ),
+        );
       });
       startTimer();
     });
   }
-
 
   void startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 10), (Timer timer) {
@@ -76,14 +79,24 @@ class _SpaceInfoState extends State<SpaceInfo> {
       }
     });
   }
+
   void stopTimer() {
     _timer?.cancel();
   }
 
   @override
+  void dispose() {
+    _pageController.dispose();
+    stopTimer();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Container(
-      color: lightGray,
+      color: themeProvider.isDarkMode ? Colors.grey[850] : lightGray,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -125,29 +138,31 @@ class _SpaceInfoState extends State<SpaceInfo> {
             ],
           ),
           Padding(
-              padding: const EdgeInsets.only(left: 20, right: 20, top: 20),
-              child: Text(
-                widget.space.title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              )),
+            padding: const EdgeInsets.only(left: 20, right: 20, top: 20),
+            child: Text(
+              widget.space.title,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: themeProvider.isDarkMode ? Colors.white : Colors.black,
+              ),
+            ),
+          ),
           GestureDetector(
             onTap: widget.authentifiedUserId != null
                 ? () async {
-                    await showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return RatingAlertDialog(
-                          spaceTitle: widget.space.title,
-                          onRatingUpdate: widget.onRatingUpdate,
-                          initialRating: widget.initialRating,
-                          submit: widget.submit,
-                        );
-                      },
-                    );
-                  }
+              await showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return RatingAlertDialog(
+                    spaceTitle: widget.space.title,
+                    onRatingUpdate: widget.onRatingUpdate,
+                    initialRating: widget.initialRating,
+                    submit: widget.submit,
+                  );
+                },
+              );
+            }
                 : null,
             child: Row(
               children: [
@@ -157,56 +172,58 @@ class _SpaceInfoState extends State<SpaceInfo> {
                   ),
                   child: widget.space.rating != null
                       ? Row(
-                          children: [
-                            const Icon(
-                              Icons.star,
-                              color: yellow,
-                              size: 16,
-                            ),
-                            Text(
-                              "${widget.space.rating}/5 ",
-                            ),
-                            Text(
-                              "(" +
-                                  widget.space.numberOfRatings.toString() +
-                                  ")",
-                              style: const TextStyle(color: gray),
-                            ),
-                          ],
-                        )
-                      : const Text(
-                          "Aucune note",
-                          style: TextStyle(color: gray),
+                    children: [
+                      const Icon(
+                        Icons.star,
+                        color: yellow,
+                        size: 16,
+                      ),
+                      Text(
+                        "${widget.space.rating}/5 ",
+                        style: TextStyle(
+                          color: themeProvider.isDarkMode ? Colors.white : Colors.black,
                         ),
+                      ),
+                      Text(
+                        "(${widget.space.numberOfRatings})",
+                        style: const TextStyle(color: gray),
+                      ),
+                    ],
+                  )
+                      : const Text(
+                    "Aucune note",
+                    style: TextStyle(color: gray),
+                  ),
                 ),
                 widget.authentifiedUserId != null
                     ? const Icon(
-                        Icons.edit,
-                        size: 20,
-                      )
-                    : SizedBox()
+                  Icons.edit,
+                  size: 20,
+                )
+                    : SizedBox(),
               ],
             ),
           ),
           const Padding(
-              padding: EdgeInsets.only(left: 20, right: 20, top: 10),
-              child: Text(
-                "A propos",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              )),
+            padding: EdgeInsets.only(left: 20, right: 20, top: 10),
+            child: Text(
+              "A propos",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
           Padding(
-              padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
-              child: Text(
-                widget.space.description,
-                style: const TextStyle(
-                  fontSize: 14,
-                ),
-
-                // "Lorem ipsum dolor sit amet. Rem provident dolor nam veritatis recusandae eum enim possimus qui ullam nobis est libero dolor Non debitis galisum aut minima quae ad quasi aliquid."
-              ))
+            padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
+            child: Text(
+              widget.space.description,
+              style: TextStyle(
+                fontSize: 14,
+                color: themeProvider.isDarkMode ? Colors.white : Colors.black,
+              ),
+            ),
+          ),
         ],
       ),
     );

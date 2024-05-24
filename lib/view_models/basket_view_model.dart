@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hello_way_client/models/command.dart';
 import 'package:hello_way_client/models/user.dart';
 import 'package:hello_way_client/response/product_with_quantity.dart';
@@ -66,7 +67,13 @@ class BasketViewModel {
   Future<void> getLatestBasketByIdTable(String tableId) async {
     final url = '$baseUrl/api/baskets/latest/basket/by_table/$tableId';
     final response = await dioInterceptor.dio.get(url);
-
+    Fluttertoast.showToast(
+      msg: "data1: ${response.data.toString()}",
+      toastLength: Toast.LENGTH_LONG,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: Colors.grey[800],
+      textColor: Colors.white,
+    );
     // Handle the response from the API
     if (response.statusCode == 200) {
       final data = response.data;
@@ -160,56 +167,56 @@ class BasketViewModel {
   }
 
   Future<Command?> fetchCommandByBasketId() async {
-   final basketId= await secureStorage.readData(basketIdKey);
-      Response response = await dioInterceptor.dio.get(
-        "$baseUrl/api/commands/by/basket/$basketId",
-      );
+    final basketId= await secureStorage.readData(basketIdKey);
+    Response response = await dioInterceptor.dio.get(
+      "$baseUrl/api/commands/by/basket/$basketId",
+    );
 
-      if (response.statusCode == 200) {
+    if (response.statusCode == 200) {
 
-        if(response.data!=""){
-          print(response.data);
-          return Command.fromJson(response.data);
-        }
-        }
+      if(response.data!=""){
+        print(response.data);
+        return Command.fromJson(response.data);
+      }
+    }
 
-      return null;
+    return null;
   }
 
   Future<User> fetchServerByCommandId(int commandId) async {
 
-      final response = await dioInterceptor.dio.get(
-        "$baseUrl/api/commands/command_id/$commandId",
-      );
+    final response = await dioInterceptor.dio.get(
+      "$baseUrl/api/commands/command_id/$commandId",
+    );
 
-      if (response.statusCode == 200) {
-        print(response.data);
-        final user=User.fromJson(response.data);
-        return user;
-      } else {
-        throw Exception('Failed to load server: ${response.statusCode}');
+    if (response.statusCode == 200) {
+      print(response.data);
+      final user=User.fromJson(response.data);
+      return user;
+    } else {
+      throw Exception('Failed to load server: ${response.statusCode}');
 
-      }
+    }
 
   }
 
 
   Future<notification.Notification> createNotification(User user, String title ,String message) async {
-      final response = await dioInterceptor.dio.post(
-        "$baseUrl/api/notifications/create",
-        data: user.toJson(),
-        queryParameters: {
-          "title": title,
-          "message":message,
-        },
-      );
+    final response = await dioInterceptor.dio.post(
+      "$baseUrl/api/notifications/create",
+      data: user.toJson(),
+      queryParameters: {
+        "title": title,
+        "message":message,
+      },
+    );
 
-      if (response.statusCode == 200) {
-        final notif=notification.Notification.fromJson(response.data);
-        return notif;
-      } else {
-        throw Exception('Failed to create notification: ${response.statusCode}');
-      }
+    if (response.statusCode == 200) {
+      final notif=notification.Notification.fromJson(response.data);
+      return notif;
+    } else {
+      throw Exception('Failed to create notification: ${response.statusCode}');
+    }
 
   }
 }

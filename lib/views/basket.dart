@@ -13,6 +13,8 @@ import '../utils/secure_storage.dart';
 import '../view_models/basket_view_model.dart';
 import '../widgets/basket_item.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../models/theme_provider.dart';
+
 class Basket extends StatefulWidget {
   const Basket({super.key});
 
@@ -31,7 +33,6 @@ class _BasketState extends State<Basket> {
   @override
   void initState() {
     _basketViewModel = BasketViewModel(context);
-    // TODO: implement initState
     fetchCommandByBasketId();
     validateSessionForUsers();
     _getProductsByBasketId();
@@ -39,195 +40,164 @@ class _BasketState extends State<Basket> {
     super.initState();
   }
 
-  Future<Command?>fetchCommandByBasketId() async {
-    Command? command=await _basketViewModel.fetchCommandByBasketId();
-    commandId=command?.idCommand;
-    _command=command;
-    if(_command!.status=="PAYED"){
+  Future<Command?> fetchCommandByBasketId() async {
+    Command? command = await _basketViewModel.fetchCommandByBasketId();
+    commandId = command?.idCommand;
+    _command = command;
+    if (_command!.status == "PAYED") {
       Navigator.pushReplacementNamed(context, bottomNavigationWithFABRoute);
     }
     return command;
   }
+
   Future<List<ProductWithQuantities>> _getProductsByBasketId() async {
-    List<ProductWithQuantities> products =
-        await _basketViewModel.getProductsByBasketId();
+    List<ProductWithQuantities> products = await _basketViewModel.getProductsByBasketId();
     return products;
   }
 
   Future<double> _getTotalSumByBasketId() async {
-    List<ProductWithQuantities> products =
-        await _basketViewModel.getProductsByBasketId();
-
+    List<ProductWithQuantities> products = await _basketViewModel.getProductsByBasketId();
     double totalSum = 0;
-
     for (var product in products) {
       double productPrice = product.product.price;
       int productQuantity = product.quantity;
-
       double productSum = productPrice * productQuantity;
       totalSum += productSum;
     }
-
     setState(() {
       _totalSum = totalSum;
     });
-
     return totalSum;
   }
 
   Future<void> validateSessionForUsers() async {
     final tableId = await secureStorage.readData(tableIdKey);
     final session = await _basketViewModel.validateSessionForUsers(tableId!);
-
     setState(() {
       firstSession = session;
     });
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     NetworkStatus networkStatus = Provider.of<NetworkStatus>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
-      appBar:AppBar(title:Text( AppLocalizations.of(context)!.basket),actions: [
-         commandId!= null?
-        IconButton(
-        icon: SvgPicture.asset(
-        'assets/images/food_waiter.svg',
-        height: 30,
-        width: 30,
-        color: Colors.white,
-    ),
-    onPressed: () async {
-      await _basketViewModel.fetchServerByCommandId(commandId!).then((user) {
-
-        print(user);
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              actions: <Widget>[
-
-                MaterialButton(
-                  color: orange,
-                  height: 50,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                  minWidth: double.infinity,
-                  onPressed:() async {
-                    await _basketViewModel.createNotification(user, AppLocalizations.of(context)!.callWaiter, AppLocalizations.of(context)!.tableServiceRequest.replaceAll('%numTable',"jjj")).then((notification) {
-
-
-                        Navigator.of(context).pop();
-                    }).catchError((error) {
-                      print(error);
-                    });
-                  },
-
-
-                  child:  Text(
-                    AppLocalizations.of(context)!.callWaiter,
-                    style: const TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold),
-                  ),
-
-                ),
-                const SizedBox(height: 10,),
-                MaterialButton(
-                  color: orange,
-                  height: 50,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                  minWidth: double.infinity,
-                  onPressed:() async {
-                    await _basketViewModel.createNotification(user, AppLocalizations.of(context)!.billRequest, AppLocalizations.of(context)!.billRequestMessage.replaceAll('%numTable',"xx")).then((notification) {
-
-
-                      Navigator.of(context).pop();
-                    }).catchError((error) {
-                      print(error);
-                    });
-                  },
-
-
-                  child: Text(
-                    AppLocalizations.of(context)!.billRequest,
-                    style: const TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold),
-                  ),
-
-                ),
-                const SizedBox(height: 10,),
-                MaterialButton(
-                  color: orange,
-                  height: 50,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                  minWidth: double.infinity,
-                  onPressed:() async {
-                    await _basketViewModel.createNotification(user, "wal3a", "gggg").then((notification) {
-
-
-                      Navigator.of(context).pop();
-                    }).catchError((error) {
-                      print(error);
-                    });
-                  },
-
-
-                  child: const Text(
-                    "wal3a",
-                    style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold),
-                  ),
-
-                ),
-
-                const SizedBox(height: 20,),
-                MaterialButton(
-                  color: gray,
-                  height: 50,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                  minWidth: double.infinity,
-                  onPressed:(){
-                    Navigator.of(context).pop();
-                  },
-
-
-                  child: Text(
-                    AppLocalizations.of(context)!.cancel,
-                    style: const TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold),
-                  ),
-
-                ),
-              ],
-            );
-          },
-        );
-
-      }).catchError((error) {
-        print(error);
-      });
-
-
-    }):const SizedBox()]),
-      body:networkStatus == NetworkStatus.Online
-          ?  Column(
+      backgroundColor: themeProvider.isDarkMode ? Colors.grey[900] : Colors.white,
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context)!.basket),
+        backgroundColor: orange,
+        actions: [
+          commandId != null
+              ? IconButton(
+              icon: SvgPicture.asset(
+                'assets/images/food_waiter.svg',
+                height: 30,
+                width: 30,
+                color: Colors.white,
+              ),
+              onPressed: () async {
+                await _basketViewModel.fetchServerByCommandId(commandId!).then((user) {
+                  print(user);
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        backgroundColor: themeProvider.isDarkMode ? Colors.grey[800] : Colors.white,
+                        actions: <Widget>[
+                          MaterialButton(
+                            color: orange,
+                            height: 50,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                            ),
+                            minWidth: double.infinity,
+                            onPressed: () async {
+                              await _basketViewModel
+                                  .createNotification(user, AppLocalizations.of(context)!.callWaiter, AppLocalizations.of(context)!.tableServiceRequest.replaceAll('%numTable', "jjj"))
+                                  .then((notification) {
+                                Navigator.of(context).pop();
+                              }).catchError((error) {
+                                print(error);
+                              });
+                            },
+                            child: Text(
+                              AppLocalizations.of(context)!.callWaiter,
+                              style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          MaterialButton(
+                            color: orange,
+                            height: 50,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                            ),
+                            minWidth: double.infinity,
+                            onPressed: () async {
+                              await _basketViewModel
+                                  .createNotification(user, AppLocalizations.of(context)!.billRequest, AppLocalizations.of(context)!.billRequestMessage.replaceAll('%numTable', "xx"))
+                                  .then((notification) {
+                                Navigator.of(context).pop();
+                              }).catchError((error) {
+                                print(error);
+                              });
+                            },
+                            child: Text(
+                              AppLocalizations.of(context)!.billRequest,
+                              style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          MaterialButton(
+                            color: orange,
+                            height: 50,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                            ),
+                            minWidth: double.infinity,
+                            onPressed: () async {
+                              await _basketViewModel.createNotification(user, "wal3a", "gggg").then((notification) {
+                                Navigator.of(context).pop();
+                              }).catchError((error) {
+                                print(error);
+                              });
+                            },
+                            child: const Text(
+                              "wal3a",
+                              style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          MaterialButton(
+                            color: gray,
+                            height: 50,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                            ),
+                            minWidth: double.infinity,
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: Text(
+                              AppLocalizations.of(context)!.cancel,
+                              style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                }).catchError((error) {
+                  print(error);
+                });
+              })
+              : const SizedBox()
+        ],
+      ),
+      body: networkStatus == NetworkStatus.Online
+          ? Column(
         children: [
           Expanded(
             child: FutureBuilder(
@@ -236,18 +206,17 @@ class _BasketState extends State<Basket> {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return ListView.separated(
                       itemCount: 5,
-                      separatorBuilder: (context, index) =>
-                      const SizedBox(height: 10),
+                      separatorBuilder: (context, index) => const SizedBox(height: 10),
                       itemBuilder: (context, index) {
                         return ItemProductBasketShimmer();
                       },
                     );
                   } else if (snapshot.hasError) {
-                    return  Center(
+                    return Center(
                       child: Text(AppLocalizations.of(context)!.errorRetrievingData),
                     );
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return  Center(
+                    return Center(
                       child: Padding(
                         padding: const EdgeInsets.all(20.0),
                         child: Column(
@@ -262,10 +231,7 @@ class _BasketState extends State<Basket> {
                             const SizedBox(height: 20),
                             Text(
                               AppLocalizations.of(context)!.emptyCartMessage,
-                              style: const TextStyle(
-                                fontSize: 24,
-                                color: gray,
-                              ),
+                              style: const TextStyle(fontSize: 24, color: gray),
                             )
                           ],
                         ),
@@ -277,13 +243,10 @@ class _BasketState extends State<Basket> {
                       itemCount: products.length,
                       itemBuilder: (context, index) {
                         ProductWithQuantities product = products[index];
-
                         return BasketItem(
                           productWithQuantity: product,
                           onDelete: () {
-                            _basketViewModel
-                                .deleteProductFromBasket(product.product.id!)
-                                .then((_) {
+                            _basketViewModel.deleteProductFromBasket(product.product.id!).then((_) {
                               setState(() {
                                 _getTotalSumByBasketId();
                                 _getProductsByBasketId();
@@ -293,9 +256,7 @@ class _BasketState extends State<Basket> {
                             });
                           },
                           onIncrement: () {
-                            _basketViewModel
-                                .addProductToBasket(product.product.id!, 1)
-                                .then((_) {
+                            _basketViewModel.addProductToBasket(product.product.id!, 1).then((_) {
                               setState(() {
                                 _getTotalSumByBasketId();
                               });
@@ -305,9 +266,7 @@ class _BasketState extends State<Basket> {
                           },
                           onDecrement: () {
                             if (product.quantity > 1) {
-                              _basketViewModel
-                                  .addProductToBasket(product.product.id!, -1)
-                                  .then((_) {
+                              _basketViewModel.addProductToBasket(product.product.id!, -1).then((_) {
                                 setState(() {
                                   _getTotalSumByBasketId();
                                 });
@@ -320,7 +279,7 @@ class _BasketState extends State<Basket> {
                       },
                       separatorBuilder: (context, index) {
                         return Container(
-                          color: lightGray,
+                          color: themeProvider.isDarkMode ? Colors.grey[800] : lightGray,
                           height: 10,
                         );
                       },
@@ -335,15 +294,14 @@ class _BasketState extends State<Basket> {
                   width: double.infinity,
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(5.0), color: orange),
-                  margin:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   child: MaterialButton(
                     onPressed: () async {
-                      if(commandId==null){
+                      if (commandId == null) {
                         _basketViewModel.addNewCommand().then((command) async {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content:  Text(AppLocalizations.of(context)!.orderAddedSuccess),
+                              content: Text(AppLocalizations.of(context)!.orderAddedSuccess),
                               behavior: SnackBarBehavior.floating,
                               duration: const Duration(seconds: 3),
                               backgroundColor: Colors.green,
@@ -359,39 +317,29 @@ class _BasketState extends State<Basket> {
                             ),
                           );
 
-                          setState(()  {
-                            commandId=command.idCommand;
-
+                          setState(() {
+                            commandId = command.idCommand;
                           });
-
                         }).catchError((error) {
                           print(error);
                         });
-                      }else {
+                      } else {
                         await fetchCommandByBasketId();
                         if (_command!.status == "PAYED") {
                           Navigator.pushReplacementNamed(context, bottomNavigationWithFABRoute);
                         } else {
-                          _basketViewModel.updateCommand(commandId.toString())
-                              .then((_) {
+                          _basketViewModel.updateCommand(commandId.toString()).then((_) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content:  Text(
-                                    AppLocalizations.of(context)!.orderModifiedSuccess),
+                                content: Text(AppLocalizations.of(context)!.orderModifiedSuccess),
                                 behavior: SnackBarBehavior.floating,
                                 duration: const Duration(seconds: 3),
                                 backgroundColor: Colors.green,
                                 margin: EdgeInsets.only(
-                                  bottom: MediaQuery
-                                      .of(context)
-                                      .size
-                                      .height -
+                                  bottom: MediaQuery.of(context).size.height -
                                       kToolbarHeight -
                                       44 -
-                                      MediaQuery
-                                          .of(context)
-                                          .padding
-                                          .top,
+                                      MediaQuery.of(context).padding.top,
                                 ),
                                 shape: const RoundedRectangleBorder(
                                   borderRadius: BorderRadius.zero,
@@ -404,8 +352,10 @@ class _BasketState extends State<Basket> {
                         }
                       }
                     },
-                    child: Text(commandId==null?AppLocalizations.of(context)!.confirmOrderMessage.replaceAll('%totalSum',_totalSum.toString())
-                          :AppLocalizations.of(context)!.modifyOrderMessage.replaceAll('%totalSum',_totalSum.toString()),
+                    child: Text(
+                      commandId == null
+                          ? AppLocalizations.of(context)!.confirmOrderMessage.replaceAll('%totalSum', _totalSum.toString())
+                          : AppLocalizations.of(context)!.modifyOrderMessage.replaceAll('%totalSum', _totalSum.toString()),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16.0,
@@ -414,7 +364,8 @@ class _BasketState extends State<Basket> {
                   )),
             ),
         ],
-      ):Center(
+      )
+          : Center(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
@@ -437,33 +388,26 @@ class _BasketState extends State<Basket> {
                 style: const TextStyle(fontSize: 22, color: gray),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 10,),
+              const SizedBox(height: 10),
               MaterialButton(
                 color: orange,
                 height: 40,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10.0),
                 ),
-                onPressed:(){
-                  setState(() {
-
-                  });
+                onPressed: () {
+                  setState(() {});
                 },
-
-
                 child: Text(
                   AppLocalizations.of(context)!.retry,
                   style: const TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold),
+                      fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
                 ),
-
               )
             ],
           ),
         ),
-      )
+      ),
     );
   }
 }

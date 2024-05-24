@@ -11,8 +11,9 @@ import '../utils/secure_storage.dart';
 import '../view_models/notifications_view_model.dart';
 import '../widgets/item notfication.dart';
 
-class ListNotifications extends StatefulWidget {
+import '../models/theme_provider.dart';
 
+class ListNotifications extends StatefulWidget {
   ListNotifications({Key? key}) : super(key: key);
 
   @override
@@ -26,33 +27,37 @@ class _ListNotificationsState extends State<ListNotifications> {
   @override
   void initState() {
     _notificationViewModel = NotificationViewModel(context);
-
     _getNotifications();
     super.initState();
-
-
   }
 
   Future<List<notification.Notification>?> _getNotifications() async {
     String? userId = await secureStorage.readData(authentifiedUserId);
-    if(userId!=null){
-   final notifcations=await _notificationViewModel.fetchNotificationsForUser(userId);
-    return notifcations;}
+    if (userId != null) {
+      final notifications = await _notificationViewModel.fetchNotificationsForUser(userId);
+      return notifications;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     NetworkStatus networkStatus = Provider.of<NetworkStatus>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
-      appBar: AppBar(title: Text(AppLocalizations.of(context)!.notifications), automaticallyImplyLeading: false),
-      body:networkStatus == NetworkStatus.Online
+      backgroundColor: themeProvider.isDarkMode ? Colors.grey[900] : Colors.white,
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context)!.notifications),
+        automaticallyImplyLeading: false,
+        backgroundColor: orange,
+      ),
+      body: networkStatus == NetworkStatus.Online
           ? FutureBuilder<List<notification.Notification>?>(
         future: _getNotifications(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            // While fetching data, show a loading indicator
             return const Center(child: CircularProgressIndicator());
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty)  {
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
@@ -75,11 +80,8 @@ class _ListNotificationsState extends State<ListNotifications> {
                 ),
               ),
             );
-          }
-            // When data is available, show the list of notifications
-          else if (snapshot.hasError) {
-            // If there's an error, show an error message
-            return Center(child:Text(snapshot.error.toString()));
+          } else if (snapshot.hasError) {
+            return Center(child: Text(snapshot.error.toString()));
           } else {
             final notifications = snapshot.data!.reversed.toList();
             return ListView.separated(
@@ -87,18 +89,22 @@ class _ListNotificationsState extends State<ListNotifications> {
               separatorBuilder: (context, index) => Container(color: lightGray, height: 10),
               itemBuilder: (context, index) {
                 final notification = notifications[index];
-                return ItemNotification(notification: notification,   onDelete:() async {
-                  await _notificationViewModel.deleteNotification(notification.id)   .then((_) async {
-                    setState(() {
-                      _getNotifications();
-                    });
-                  }).catchError((error) {});
-                });
+                return ItemNotification(
+                  notification: notification,
+                  onDelete: () async {
+                    await _notificationViewModel.deleteNotification(notification.id).then((_) async {
+                      setState(() {
+                        _getNotifications();
+                      });
+                    }).catchError((error) {});
+                  },
+                );
               },
             );
           }
         },
-      ):Center(
+      )
+          : Center(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
@@ -121,29 +127,25 @@ class _ListNotificationsState extends State<ListNotifications> {
                 style: const TextStyle(fontSize: 22, color: gray),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 10,),
+              const SizedBox(height: 10),
               MaterialButton(
                 color: orange,
                 height: 40,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10.0),
                 ),
-                onPressed:(){
-                  setState(() {
-
-                  });
+                onPressed: () {
+                  setState(() {});
                 },
-
-
                 child: Text(
                   AppLocalizations.of(context)!.retry,
                   style: const TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold),
+                    fontSize: 20,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-
-              )
+              ),
             ],
           ),
         ),

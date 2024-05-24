@@ -1,6 +1,6 @@
 import 'dart:async';
-
 import 'package:flutter/cupertino.dart';
+
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -49,11 +49,12 @@ class LocationPermissionViewModel  {
         desiredAccuracy: LocationAccuracy.best,
         forceAndroidLocationManager: true
     );
+
     return position;
   }
   Future<Position> getCureentLocation() async {
     Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.best,
+      desiredAccuracy: LocationAccuracy.best,
     );
     return position;
   }

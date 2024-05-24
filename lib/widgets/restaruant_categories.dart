@@ -1,47 +1,55 @@
 import 'package:flutter/material.dart';
 import 'package:hello_way_client/res/app_colors.dart';
+import 'package:provider/provider.dart';
 import '../models/category.dart';
+import '../models/theme_provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-class SpaceCategories extends SliverPersistentHeaderDelegate{
 
+class SpaceCategories extends SliverPersistentHeaderDelegate {
   const SpaceCategories({
     Key? key,
     required this.onChanged,
     required this.selectedIndex,
-    required this.items
+    required this.items,
   });
 
   final ValueChanged<int> onChanged;
   final int selectedIndex;
   final List<Category> items;
+
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Container(
-        height: 52,
-        color: Colors.white,
-        child: Categories(onChanged: onChanged, selectedIndex: selectedIndex, items: items));
+      height: 52,
+      color: themeProvider.isDarkMode ? Colors.grey[900] : Colors.white,
+      child: Categories(
+        onChanged: onChanged,
+        selectedIndex: selectedIndex,
+        items: items,
+      ),
+    );
   }
 
   @override
-  // TODO: implement maxExtent
   double get maxExtent => 52;
 
   @override
-  // TODO: implement minExtent
   double get minExtent => 52;
 
   @override
   bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
     return oldDelegate != this;
   }
-  
 }
+
 class Categories extends StatefulWidget {
   const Categories({
     Key? key,
     required this.onChanged,
     required this.selectedIndex,
-    required this.items
+    required this.items,
   }) : super(key: key);
 
   final ValueChanged<int> onChanged;
@@ -53,8 +61,8 @@ class Categories extends StatefulWidget {
 }
 
 class _CategoriesState extends State<Categories> {
-  // int selectedIndex = 0;
   late ScrollController _controller;
+
   @override
   void initState() {
     _controller = ScrollController();
@@ -77,10 +85,10 @@ class _CategoriesState extends State<Categories> {
     super.didUpdateWidget(oldWidget);
   }
 
-
-
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return SingleChildScrollView(
       controller: _controller,
       scrollDirection: Axis.horizontal,
@@ -99,20 +107,15 @@ class _CategoriesState extends State<Categories> {
             child: TextButton(
               onPressed: () {
                 widget.onChanged(index);
-                // _controller.animateTo(
-                //   80.0 * index,
-                //   curve: Curves.ease,
-                //   duration: const Duration(milliseconds: 200),
-                // );
               },
               style: TextButton.styleFrom(
-                foregroundColor: widget.selectedIndex == index ? orange : Colors.black45,
+                foregroundColor: widget.selectedIndex == index ? orange : (themeProvider.isDarkMode ? Colors.white70 : Colors.black45),
               ),
-              child: Text(   widget.items[index].categoryTitle
-                  .substring(0, 1)
-                  .toUpperCase() +
-                  widget.items[index].categoryTitle.substring(1),
-
+              child: Text(
+                widget.items[index].categoryTitle
+                    .substring(0, 1)
+                    .toUpperCase() +
+                    widget.items[index].categoryTitle.substring(1),
                 style: const TextStyle(fontSize: 18),
               ),
             ),
@@ -120,6 +123,5 @@ class _CategoriesState extends State<Categories> {
         ),
       ),
     );
-
   }
 }

@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/product.dart';
 import '../res/app_colors.dart';
-import '../view_models/basket_view_model.dart';
+import '../models/theme_provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 class MenuCard extends StatefulWidget {
   final Product product;
   final void Function()? onTap;
@@ -15,17 +17,17 @@ class MenuCard extends StatefulWidget {
 }
 
 class _MenuCardState extends State<MenuCard> {
-
-
   @override
   void initState() {
-
     super.initState();
   }
+
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Container(
-      color: Colors.white,
+      color: themeProvider.isDarkMode ? Colors.grey[850] : Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       height: 140,
       width: MediaQuery.of(context).size.width,
@@ -43,7 +45,15 @@ class _MenuCardState extends State<MenuCard> {
                   Icons.image_outlined,
                   color: gray.withOpacity(0.5),
                 )
-                    : Image.memory(base64.decode(widget.product.images![widget.product.images!.length-1].data)),
+                    : Image.memory(
+                  base64.decode(widget.product.images![widget.product.images!.length - 1].data),
+                  errorBuilder: (context, error, stackTrace) {
+                    return Icon(
+                      Icons.broken_image,
+                      color: gray.withOpacity(0.5),
+                    );
+                  },
+                ),
               ),
             ),
           ),
@@ -64,16 +74,15 @@ class _MenuCardState extends State<MenuCard> {
                           Text(
                             widget.product.title.substring(0, 1).toUpperCase() +
                                 widget.product.title.substring(1),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                               overflow: TextOverflow.ellipsis,
+                              color: themeProvider.isDarkMode ? Colors.white : Colors.black,
                             ),
                           ),
-
-
                           InkWell(
-                            onTap:widget.onTap,
+                            onTap: widget.onTap,
                             child: Container(
                               width: 25.0,
                               height: 25.0,
@@ -96,7 +105,9 @@ class _MenuCardState extends State<MenuCard> {
                         padding: const EdgeInsets.only(top: 10.0, bottom: 10),
                         child: Text(
                           widget.product.description,
-                          style: const TextStyle(color: gray),
+                          style: TextStyle(
+                            color: themeProvider.isDarkMode ? Colors.white : gray,
+                          ),
                           overflow: TextOverflow.ellipsis,
                           maxLines: 2,
                         ),
@@ -104,48 +115,64 @@ class _MenuCardState extends State<MenuCard> {
                       widget.product.hasActivePromotion!
                           ? Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                    Row(children: [
-                      Text(
-                        "${(widget.product.price *(100- widget.product.percentage!)) / 100} DT",
-
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(width: 5,),
-                      const Text("(",     style: TextStyle( color: gray),),
-                      Stack(
-                        alignment: Alignment.center,
                         children: [
-                          Text(
-                            "${widget.product.price} DT",
-                            style: TextStyle( color: gray),
-                            textAlign: TextAlign.center,
+                          Row(
+                            children: [
+                              Text(
+                                "${(widget.product.price * (100 - widget.product.percentage!)) / 100} DT",
+                                style: TextStyle(
+                                  color: themeProvider.isDarkMode ? Colors.white : Colors.black,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(width: 5),
+                              const Text(
+                                "(",
+                                style: TextStyle(color: gray),
+                              ),
+                              Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  Text(
+                                    "${widget.product.price} DT",
+                                    style: TextStyle(color: gray),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  Positioned(
+                                    left: 0,
+                                    right: 0,
+                                    child: Container(
+                                      height: 1,
+                                      color: gray,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const Text(
+                                ")",
+                                style: TextStyle(color: gray),
+                              ),
+                            ],
                           ),
-                          // Horizontal line
-                          Positioned(
-                            left: 0, // Adjust the position of the line
-                            right: 0,
-                            child: Container(
-                              height: 1,
-                              color: gray, // Line color
+                          Container(
+                            padding: const EdgeInsets.all(5),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.5),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              "- ${widget.product.percentage}%",
+                              style: const TextStyle(color: Colors.white),
                             ),
                           ),
                         ],
-                      ),        const Text(")",     style: TextStyle( color: gray),),
-                    ],),
-                              Container(
-                                  padding: EdgeInsets.all(5),
-                                  decoration: BoxDecoration(
-                                    color: Colors.orange.withOpacity(0.5),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text("- ${widget.product.percentage}%",style: const TextStyle(color: Colors.white),))
-                            ],
-                          )
+                      )
                           : Text(
-                            "${widget.product.price}DT",
-
-                          ),
+                        "${widget.product.price} DT",
+                        style: TextStyle(
+                          color: themeProvider.isDarkMode ? Colors.white : Colors.black,
+                        ),
+                      ),
                     ],
                   ),
                 ),

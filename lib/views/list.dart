@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../services/network_service.dart';
 import '../shimmer/item_reservation_shimmer.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../models/theme_provider.dart';
 
 class ListReservations extends StatefulWidget {
   const ListReservations({super.key});
@@ -17,51 +18,49 @@ class ListReservations extends StatefulWidget {
 }
 
 class _ListReservationsState extends State<ListReservations> {
-  late ReservationsViewModel _listReservationsViewModel ;
+  late ReservationsViewModel _listReservationsViewModel;
 
   Future<List<Reservation>> getCommandsByUserId() async {
     List<Reservation> reservations = await _listReservationsViewModel.getReservationsByUserId();
     return reservations;
   }
 
-
   @override
   void initState() {
-    // TODO: implement initState
     _listReservationsViewModel = ReservationsViewModel(context);
-    getCommandsByUserId( );
-
+    getCommandsByUserId();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     NetworkStatus networkStatus = Provider.of<NetworkStatus>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
-      backgroundColor: lightGray,
+      backgroundColor: themeProvider.isDarkMode ? Colors.grey[900] : lightGray,
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.myReservations),
+        backgroundColor: orange,
       ),
-      body:networkStatus == NetworkStatus.Online
+      body: networkStatus == NetworkStatus.Online
           ? FutureBuilder(
         future: getCommandsByUserId(),
-        builder: (BuildContext context,
-            AsyncSnapshot<List<Reservation>> snapshot) {
+        builder: (BuildContext context, AsyncSnapshot<List<Reservation>> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return ListView.separated(
               itemCount: 5,
-              separatorBuilder: (context, index) =>
-              const SizedBox(height: 10),
+              separatorBuilder: (context, index) => const SizedBox(height: 10),
               itemBuilder: (context, index) {
                 return const ItemReservationShimmer();
               },
             );
           } else if (snapshot.hasError) {
-            return  Center(
+            return Center(
               child: Text(AppLocalizations.of(context)!.errorRetrievingData),
             );
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-               return Center(
+            return Center(
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Column(
@@ -88,37 +87,34 @@ class _ListReservationsState extends State<ListReservations> {
             return ListView.separated(
               itemCount: reservations.length,
               itemBuilder: (context, index) {
-                  Reservation reservation = reservations[index];
-
-                      return GestureDetector(
-                        child: ItemReservation(reservation: reservation,
-
-
+                Reservation reservation = reservations[index];
+                return GestureDetector(
+                  child: ItemReservation(
+                    reservation: reservation,
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ReservationDetails(
+                          reservation: reservation,
                         ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ReservationDetails(
-
-                                reservation: reservation,
-                              ),
-                            ),
-                          );
-                        },
-                      );
-
+                      ),
+                    );
+                  },
+                );
               },
               separatorBuilder: (context, index) {
                 return Container(
-                  color: lightGray,
+                  color: themeProvider.isDarkMode ? Colors.grey[800] : lightGray,
                   height: 10,
                 );
               },
             );
           }
         },
-      ):Center(
+      )
+          : Center(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
@@ -141,29 +137,22 @@ class _ListReservationsState extends State<ListReservations> {
                 style: const TextStyle(fontSize: 22, color: gray),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 10,),
+              const SizedBox(height: 10),
               MaterialButton(
                 color: orange,
                 height: 40,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10.0),
                 ),
-                onPressed:(){
-                  setState(() {
-
-                  });
+                onPressed: () {
+                  setState(() {});
                 },
-
-
                 child: Text(
                   AppLocalizations.of(context)!.retry,
                   style: const TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold),
+                      fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
                 ),
-
-              )
+              ),
             ],
           ),
         ),

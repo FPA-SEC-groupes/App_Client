@@ -14,11 +14,12 @@ import '../services/network_service.dart';
 import '../utils/const.dart';
 import '../utils/routes.dart';
 import '../widgets/app_bar.dart';
+import '../models/theme_provider.dart';
 
 class DetailsSpace extends StatefulWidget {
-   final Space space;
-   const DetailsSpace(
-       {super.key, required this.space});
+  final Space space;
+  const DetailsSpace({super.key, required this.space});
+
   @override
   _DetailsSpaceState createState() => _DetailsSpaceState();
 }
@@ -29,18 +30,15 @@ class _DetailsSpaceState extends State<DetailsSpace> {
   int _currentPage = 0;
   List<Widget> _pages = [];
   Timer? _timer;
-  bool authentifiedUser=false;
-
-
+  bool authentifiedUser = false;
 
   Future<void> verifyAuthentication() async {
     String? userId = await secureStorage.readData(authentifiedUserId);
-    if (userId!=null){
-      authentifiedUser=true;
-    }else{
-      authentifiedUser=false;
-    }
+    setState(() {
+      authentifiedUser = userId != null;
+    });
   }
+
   @override
   void initState() {
     verifyAuthentication();
@@ -49,24 +47,24 @@ class _DetailsSpaceState extends State<DetailsSpace> {
       setState(() {
         _pages = widget.space.images!.isEmpty
             ? [
-                FittedBox(
-                  child: Icon(Icons.image_outlined, color: gray),
-                )
-              ]
+          FittedBox(
+            child: Icon(Icons.image_outlined, color: gray),
+          )
+        ]
             : List.generate(
           widget.space.images!.length,
-                (index) => Container(
-                  height: 50,
-                  child: ClipRRect(
-                    child: FittedBox(
-                      fit: BoxFit.fill,
-                      child: Image.memory(
-                        base64.decode(widget.space.images![index].data),
-                      ),
-                    ),
-                  ),
+              (index) => Container(
+            height: 50,
+            child: ClipRRect(
+              child: FittedBox(
+                fit: BoxFit.fill,
+                child: Image.memory(
+                  base64.decode(widget.space.images![index].data),
                 ),
-              );
+              ),
+            ),
+          ),
+        );
       });
       startTimer();
     });
@@ -81,9 +79,7 @@ class _DetailsSpaceState extends State<DetailsSpace> {
           curve: Curves.easeInOut,
         );
       } else {
-        _pageController.jumpToPage(
-          0,
-        );
+        _pageController.jumpToPage(0);
       }
     });
   }
@@ -93,15 +89,14 @@ class _DetailsSpaceState extends State<DetailsSpace> {
     stopTimer();
     super.dispose();
   }
+
   void stopTimer() {
     _timer?.cancel();
   }
 
-
   launchCaller(String phoneNumber) async {
     final PermissionStatus status = await Permission.phone.request();
     if (status == PermissionStatus.granted) {
-      // Remplacez par votre numéro de téléphone
       final uri = Uri.parse(phoneNumber);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri);
@@ -112,17 +107,19 @@ class _DetailsSpaceState extends State<DetailsSpace> {
       throw 'La permission d\'accéder au téléphone n\'a pas été accordée';
     }
   }
+
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     NetworkStatus networkStatus = Provider.of<NetworkStatus>(context);
     final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       appBar: Toolbar(
-        title: widget.space.title ,
+        title: widget.space.title,
       ),
-
       body: networkStatus == NetworkStatus.Online
-          ?Stack(
+          ? Stack(
         children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,9 +127,7 @@ class _DetailsSpaceState extends State<DetailsSpace> {
               Stack(
                 children: [
                   SizedBox(
-
-                    height: screenHeight/2.5,
-
+                    height: screenHeight / 2.5,
                     child: PageView(
                       controller: _pageController,
                       onPageChanged: (int page) {
@@ -143,12 +138,11 @@ class _DetailsSpaceState extends State<DetailsSpace> {
                       children: _pages,
                     ),
                   ),
-
                   Positioned(
                     left: 0,
                     bottom: 10,
                     right: 0,
-                    child:  Row(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List<Widget>.generate(_pages.length, (int index) {
                         return AnimatedContainer(
@@ -167,176 +161,158 @@ class _DetailsSpaceState extends State<DetailsSpace> {
                 ],
               ),
               Padding(
-                  padding: const EdgeInsets.only(left: 20, right: 20, top: 20),
-                  child: Text(
-                    widget.space.title,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
+                padding: const EdgeInsets.only(left: 20, right: 20, top: 20),
+                child: Text(
+                  widget.space.title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: widget.space.rating != null
                     ? Row(
-                        children: [
-                          const Icon(
-                            Icons.star,
-                            color: yellow,
-                            size: 16,
-                          ),
-                          Text(
-                            "${widget.space.rating}/5 ",
-                          ),
-                          Text("(${widget.space.numberOfRatings})",
-                            style: const TextStyle(color: gray),
-                          ),
-                        ],
-                      )
-                    :
-                const Text(
-                        "Aucune note",
-                        style: TextStyle(color: gray),
-                      ),
+                  children: [
+                    const Icon(
+                      Icons.star,
+                      color: yellow,
+                      size: 16,
+                    ),
+                    Text(
+                      "${widget.space.rating}/5 ",
+                    ),
+                    Text(
+                      "(${widget.space.numberOfRatings})",
+                      style: const TextStyle(color: gray),
+                    ),
+                  ],
+                )
+                    : const Text(
+                  "Aucune note",
+                  style: TextStyle(color: gray),
+                ),
               ),
-
               Padding(
-                padding: const EdgeInsets.only(left: 15.0,right:20,top: 10,bottom: 10),
+                padding: const EdgeInsets.only(left: 15.0, right: 20, top: 10, bottom: 10),
                 child: InkWell(
                   onTap: () {
-                    Navigator.pushNamed(context, spaceLocationRoute,arguments: widget.space);
+                    Navigator.pushNamed(context, spaceLocationRoute, arguments: widget.space);
                   },
-                  child: Container(
-
-
-                    child:  Row(
-                   children:  [
-                     const Icon(
-                       Icons.location_on_sharp,
-                       color: orange,
-                       size: 25.0,
-                     ),
-                     Text(AppLocalizations.of(context)!.location,style: const TextStyle(fontSize: 18,color: orange),)
-                   ],
-                    ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.location_on_sharp,
+                        color: orange,
+                        size: 25.0,
+                      ),
+                      Text(
+                        AppLocalizations.of(context)!.location,
+                        style: const TextStyle(fontSize: 18, color: orange),
+                      ),
+                    ],
                   ),
                 ),
               ),
-               Padding(
-                  padding: const EdgeInsets.only(left: 20, right: 20, top: 10),
-                  child: Text(
-                    AppLocalizations.of(context)!.about,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )),
-               Padding(
-                  padding: const EdgeInsets.only(
-                    left: 20,
-                    right: 20,
+              Padding(
+                padding: const EdgeInsets.only(left: 20, right: 20, top: 10),
+                child: Text(
+                  AppLocalizations.of(context)!.about,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
-                  child: Text(
-                      widget.space.description,
-                    style: const TextStyle(
-                      fontSize: 14,
-                    ),
-                  ))
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 20, right: 20),
+                child: Text(
+                  widget.space.description,
+                  style: const TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
             ],
           ),
-
-
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
-                color: Colors.white,
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-
-
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(5.0),
-                          color: orange,
-                        ),
-                        child: MaterialButton(
-                          height: 50,
-                          onPressed: () {
-                            authentifiedUser?Navigator.push(
+              color: themeProvider.isDarkMode ? Colors.grey[900] : Colors.white,
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(5.0),
+                        color: orange,
+                      ),
+                      child: MaterialButton(
+                        height: 50,
+                        onPressed: () {
+                          authentifiedUser
+                              ? Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AddReservation(space: widget.space),
+                            ),
+                          )
+                              : Navigator.pushNamed(context, loginRoute).then((user) async {
+                            await verifyAuthentication();
+                            await Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => AddReservation(space: widget.space,)
+                                builder: (context) => AddReservation(space: widget.space),
                               ),
-                            ):    Navigator.pushNamed(context, loginRoute).then((user) async {
-
-
-
-                                await verifyAuthentication();
-
-
-                              await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                              builder: (context) => AddReservation(space: widget.space,)
-                              ),
-                              ).then((user) async {
-
-                                  await verifyAuthentication();
-
-
-
-                                  }).catchError((error) {
-                                  print(error);
-                                  });
-
+                            ).then((user) async {
+                              await verifyAuthentication();
                             }).catchError((error) {
                               print(error);
-                            });},
-                          child:   Text(
-                            AppLocalizations.of(context)!.book,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20.0,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 30,),
-                    InkWell(
-                      onTap: () {
-                        launchCaller("tel:${widget.space.phoneNumber}");
-                      },
-                      child: Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(5.0),
-                            color: Colors.green
-                        ),
-
-                        child: const Center(
-                          child: Icon(
-                            Icons.phone,
+                            });
+                          }).catchError((error) {
+                            print(error);
+                          });
+                        },
+                        child: Text(
+                          AppLocalizations.of(context)!.book,
+                          style: const TextStyle(
                             color: Colors.white,
-                            size: 30.0,
+                            fontSize: 20.0,
                           ),
                         ),
                       ),
                     ),
-
-
-                  ],
-                )),
-          )
-
-
+                  ),
+                  const SizedBox(width: 30),
+                  InkWell(
+                    onTap: () {
+                      launchCaller("tel:${widget.space.phoneNumber}");
+                    },
+                    child: Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(5.0),
+                        color: Colors.green,
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.phone,
+                          color: Colors.white,
+                          size: 30.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
-      ):Center(
+      )
+          : Center(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
@@ -359,29 +335,25 @@ class _DetailsSpaceState extends State<DetailsSpace> {
                 style: const TextStyle(fontSize: 22, color: gray),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 10,),
+              const SizedBox(height: 10),
               MaterialButton(
                 color: orange,
                 height: 40,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10.0),
                 ),
-                onPressed:(){
-                  setState(() {
-
-                  });
+                onPressed: () {
+                  setState(() {});
                 },
-
-
                 child: Text(
                   AppLocalizations.of(context)!.retry,
                   style: const TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold),
+                    fontSize: 20,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-
-              )
+              ),
             ],
           ),
         ),
