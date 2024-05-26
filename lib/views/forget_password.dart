@@ -3,14 +3,15 @@ import 'package:form_field_validator/form_field_validator.dart';
 import 'package:hello_way_client/utils/routes.dart';
 import 'package:hello_way_client/widgets/app_bar.dart';
 import 'package:provider/provider.dart';
-
-import '../Widgets/button.dart';
-import '../Widgets/input_form.dart';
+import '../models/theme_provider.dart';
+import '../widgets/button.dart';
+import '../widgets/input_form.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-
 import '../res/app_colors.dart';
 import '../services/network_service.dart';
 import '../view_models/forget_password_view_model.dart';
+import '../utils/secure_storage.dart';
+
 class ForgetPassword extends StatefulWidget {
   const ForgetPassword({Key? key}) : super(key: key);
 
@@ -26,99 +27,99 @@ class _ForgetPasswordState extends State<ForgetPassword> {
   @override
   void initState() {
     super.initState();
-    _forgetPasswordViewModel=ForgetPasswordViewModel(context);
+    _forgetPasswordViewModel = ForgetPasswordViewModel(context);
     _emailController = TextEditingController();
   }
 
   @override
   void dispose() {
     _emailController.dispose();
-
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     NetworkStatus networkStatus = Provider.of<NetworkStatus>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
-      appBar: Toolbar(title: AppLocalizations.of(context)!.forgotPassword),
-      backgroundColor: Colors.white,
-      body:networkStatus == NetworkStatus.Online
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context)!.forgotPassword),
+        backgroundColor: Colors.orange,
+        actions: [
+
+        ],
+      ),
+      body: networkStatus == NetworkStatus.Online
           ? Center(
-          child: Form(
-            key: _forgetPasswordKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 20.0),
-                    child: Column(children: [
-
-
-                       Text(  AppLocalizations.of(context)!.passwordResetEmail,  textAlign: TextAlign.center,style: const TextStyle(
-                        fontSize: 16,fontWeight: FontWeight.bold
-                      ),),
-                      const SizedBox(
-                        height: 20,
+        child: Form(
+          key: _forgetPasswordKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  "assets/images/logo.png",
+                  height: 100,
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 20.0),
+                  child: Column(
+                    children: [
+                      Text(
+                        AppLocalizations.of(context)!.passwordResetEmail,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
+                      const SizedBox(height: 20),
                       InputForm(
-                        hint:AppLocalizations.of(context)!.email,
+                        hint: AppLocalizations.of(context)!.email,
                         controller: _emailController,
                         contentPadding: const EdgeInsets.all(10),
                         validator: MultiValidator([
-                          RequiredValidator(errorText:  AppLocalizations.of(context)!.inputRequiredError),
-                          EmailValidator(errorText: AppLocalizations.of(context)!.invalidEmail)
+                          RequiredValidator(
+                              errorText: AppLocalizations.of(context)!.inputRequiredError),
+                          EmailValidator(
+                              errorText: AppLocalizations.of(context)!.invalidEmail),
                         ]),
                       ),
-                      const SizedBox(
-                        height: 20,
-                      ),
-
-                      Button(text: AppLocalizations.of(context)!.send,
+                      const SizedBox(height: 20),
+                      Button(
+                        text: AppLocalizations.of(context)!.send,
                         onPressed: () async {
-
                           if (_forgetPasswordKey.currentState!.validate()) {
                             _forgetPasswordKey.currentState!.save();
-                            final email=_emailController.text.trim();
-
+                            final email = _emailController.text.trim();
                             _forgetPasswordViewModel.resetPassword(email).then((message) async {
-
-
-                              if(message=="Password reset successfully. Please check your email for the new password."){
-                                Navigator.pushNamed(context,loginRoute);
-                              }else if(message=="Error: User not found with the provided email."){
-                                ScaffoldMessenger.of(context).showSnackBar( SnackBar(
-                                    content: Text(AppLocalizations.of(context)!.emailNotAssociated),
-                                    duration: const Duration(seconds: 3),
-                                    backgroundColor: Colors.red));
+                              if (message == "Password reset successfully. Please check your email for the new password.") {
+                                Navigator.pushNamed(context, loginRoute);
+                              } else if (message == "Error: User not found with the provided email.") {
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                  content: Text(AppLocalizations.of(context)!.emailNotAssociated),
+                                  duration: const Duration(seconds: 3),
+                                  backgroundColor: Colors.red,
+                                ));
                               }
-
-
-
-
-
                             }).catchError((error) {
                               print(error);
-
                             });
                           }
                         },
                       ),
-                      const SizedBox(
-                        height: 20,
-                      ),
-
-
-                    ]),
-
+                      const SizedBox(height: 20),
+                    ],
                   ),
-
-
-                ],
-              ),
+                ),
+              ],
             ),
-          )):Center(
+          ),
+        ),
+      )
+          : Center(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
@@ -141,29 +142,22 @@ class _ForgetPasswordState extends State<ForgetPassword> {
                 style: const TextStyle(fontSize: 22, color: gray),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 10,),
+              const SizedBox(height: 10),
               MaterialButton(
                 color: orange,
                 height: 40,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10.0),
                 ),
-                onPressed:(){
-                  setState(() {
-
-                  });
+                onPressed: () {
+                  setState(() {});
                 },
-
-
                 child: Text(
                   AppLocalizations.of(context)!.retry,
                   style: const TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold),
+                      fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
                 ),
-
-              )
+              ),
             ],
           ),
         ),

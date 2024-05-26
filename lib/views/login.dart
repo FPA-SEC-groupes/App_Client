@@ -45,99 +45,104 @@ class _LoginState extends State<Login> {
       appBar: Toolbar(title: AppLocalizations.of(context)!.login),
       body: networkStatus == NetworkStatus.Online
           ? Center(
-          child: Form(
-            key: _loginFormKey,
-            child: SingleChildScrollView(
+        child: Form(
+          key: _loginFormKey,
+          child: SingleChildScrollView(
+            child: Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage("assets/images/logo.png"),
+                  fit: BoxFit.cover,
+                ),
+              ),
               child: Column(
                 children: [
-                  Image.asset("assets/images/logo.png"),
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 20.0),
-                    child: Column(children: [
-                      const SizedBox(height: 20),
-                      InputForm(
-                        hint: AppLocalizations.of(context)!.username,
-                        controller: _usernameController,
-                        prefixIcon: const Icon(Icons.person),
-                        contentPadding: const EdgeInsets.all(10),
-                        validator: MultiValidator([
-                          RequiredValidator(
-                              errorText: AppLocalizations.of(context)!.inputRequiredError),
-                        ]),
-                      ),
-                      const SizedBox(height: 20),
-                      InputFormPassword(
-                        hint: AppLocalizations.of(context)!.password,
-                        controller: _passwordController,
-                        prefixIcon: const Icon(Icons.lock),
-                        validator: MultiValidator([
-                          RequiredValidator(
-                              errorText: AppLocalizations.of(context)!.inputRequiredError),
-                        ]),
-                        contentPadding: const EdgeInsets.all(10),
-                      ),
-                      GestureDetector(
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 20, bottom: 20),
-                          child: Text(AppLocalizations.of(context)!.forgotPassword),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 20),
+                        InputForm(
+                          hint: AppLocalizations.of(context)!.username,
+                          controller: _usernameController,
+                          prefixIcon: const Icon(Icons.person),
+                          contentPadding: const EdgeInsets.all(10),
+                          validator: MultiValidator([
+                            RequiredValidator(
+                                errorText: AppLocalizations.of(context)!.inputRequiredError),
+                          ]),
                         ),
-                        onTap: () {
-                          Navigator.pushNamed(context, forgetPasswordRoute);
-                        },
-                      ),
-                      Button(
-                        text: AppLocalizations.of(context)!.login,
-                        onPressed: () async {
-                          if (_loginFormKey.currentState!.validate()) {
-                            _loginFormKey.currentState!.save();
-                            var username = _usernameController.text.trim().toString();
-                            var password = _passwordController.text.trim().toString();
-                            _loginViewModel.login(context, username, password).then((user) {
-                              if (index != null) {
-                                Navigator.pushReplacementNamed(context, bottomNavigationWithFABRoute, arguments: index);
-                              } else {
-                                Navigator.of(context).pop();
-                              }
-                            }).catchError((error) {
-                              print(error);
-                            });
-                          }
-                        },
-                      ),
-
-                Padding(padding:const EdgeInsets.only(
-                    top: 20,
-                    bottom: 20
-                ),
-                    child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children:  [
-                    Text(AppLocalizations.of(context)!.newAccount),
-                    const SizedBox(width: 5,),
-                      GestureDetector(
-                        child: Padding(padding:const EdgeInsets.only(
-                            top: 20,
-                            bottom: 20
+                        const SizedBox(height: 20),
+                        InputFormPassword(
+                          hint: AppLocalizations.of(context)!.password,
+                          controller: _passwordController,
+                          prefixIcon: const Icon(Icons.lock),
+                          validator: MultiValidator([
+                            RequiredValidator(
+                                errorText: AppLocalizations.of(context)!.inputRequiredError),
+                          ]),
+                          contentPadding: const EdgeInsets.all(10),
                         ),
-                            child:   Text(AppLocalizations.of(context)!.signUp,style: const TextStyle(color: yellow )),
+                        GestureDetector(
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 20, bottom: 20),
+                            child: Text(AppLocalizations.of(context)!.forgotPassword),
                           ),
-                          onTap: (){
-                            Navigator.pushNamed(context, signUpRoute);
-                          }
-                      ),
-
-                  ],),),
-
-
-                ]),
-
+                          onTap: () {
+                            Navigator.pushNamed(context, forgetPasswordRoute);
+                          },
+                        ),
+                        Button(
+                          text: AppLocalizations.of(context)!.login,
+                          onPressed: () async {
+                            if (_loginFormKey.currentState!.validate()) {
+                              _loginFormKey.currentState!.save();
+                              var username = _usernameController.text.trim().toString();
+                              var password = _passwordController.text.trim().toString();
+                              _loginViewModel.login(context, username, password).then((user) {
+                                if (index != null) {
+                                  Navigator.pushReplacementNamed(context, bottomNavigationWithFABRoute, arguments: index);
+                                } else {
+                                  Navigator.of(context).pop();
+                                }
+                              }).catchError((error) {
+                                print(error);
+                              });
+                            }
+                          },
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 20, bottom: 20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(AppLocalizations.of(context)!.newAccount),
+                              const SizedBox(width: 5),
+                              GestureDetector(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: 20, bottom: 20),
+                                  child: Text(
+                                    AppLocalizations.of(context)!.signUp,
+                                    style: const TextStyle(color: yellow),
+                                  ),
+                                ),
+                                onTap: () {
+                                  Navigator.pushNamed(context, signUpRoute);
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-
-
-            ],
+            ),
           ),
         ),
-      )):Center(
+      )
+          : Center(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
@@ -160,28 +165,21 @@ class _LoginState extends State<Login> {
                 style: const TextStyle(fontSize: 22, color: gray),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 10,),
+              const SizedBox(height: 10),
               MaterialButton(
                 color: orange,
                 height: 40,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10.0),
                 ),
-                onPressed:(){
-                  setState(() {
-
-                  });
+                onPressed: () {
+                  setState(() {});
                 },
-
-
                 child: Text(
                   AppLocalizations.of(context)!.retry,
                   style: const TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold),
+                      fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
                 ),
-
               )
             ],
           ),
