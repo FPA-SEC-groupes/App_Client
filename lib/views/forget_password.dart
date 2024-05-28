@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:form_field_validator/form_field_validator.dart';
 import 'package:hello_way_client/utils/routes.dart';
-import 'package:hello_way_client/widgets/app_bar.dart';
 import 'package:provider/provider.dart';
 import '../models/theme_provider.dart';
 import '../widgets/button.dart';
@@ -46,9 +45,7 @@ class _ForgetPasswordState extends State<ForgetPassword> {
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.forgotPassword),
         backgroundColor: Colors.orange,
-        actions: [
-
-        ],
+        actions: [],
       ),
       body: networkStatus == NetworkStatus.Online
           ? Center(
@@ -109,6 +106,13 @@ class _ForgetPasswordState extends State<ForgetPassword> {
                             });
                           }
                         },
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pushNamed(context, 'shiftPage');
+                        },
+                        child: Text("Go to ShiftPage"),
                       ),
                       const SizedBox(height: 20),
                     ],
