@@ -1,4 +1,4 @@
-const baseUrl="http://192.168.1.26:8082";
+const baseUrl="https://backend-production-2a96.up.railway.app";
 //const baseUrl = "http://192.168.74.214:8082";
 
 

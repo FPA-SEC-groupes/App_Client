@@ -55,15 +55,22 @@ class _ForgetPasswordState extends State<ForgetPassword> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(
-                  "assets/images/logo.png",
-                  height: 100,
-                ),
-                const SizedBox(height: 20),
                 Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20.0),
+                  margin: const EdgeInsets.only(
+                    left: 20.0,
+                    right: 20.0,
+                    top: 10.0,
+                  ),
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/images/logo.png'),
+                      fit: BoxFit.cover,
+                      alignment: Alignment.center,
+                    ),
+                  ),
                   child: Column(
                     children: [
+                      const SizedBox(height: 20),
                       Text(
                         AppLocalizations.of(context)!.passwordResetEmail,
                         textAlign: TextAlign.center,
@@ -106,13 +113,6 @@ class _ForgetPasswordState extends State<ForgetPassword> {
                             });
                           }
                         },
-                      ),
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.pushNamed(context, 'shiftPage');
-                        },
-                        child: Text("Go to ShiftPage"),
                       ),
                       const SizedBox(height: 20),
                     ],
